@@ -12,21 +12,20 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	broadcaster := broadcast.NewBroadcaster(ctx).Listeners(
+	broadcaster := broadcast.NewBroadcaster().Listeners(
+		ctx,
 		makeListener("John"),
 		makeListener("Amy"),
 		makeListener("Deco"),
 		makeListener("Rian"),
 		makeListener("Kathy"),
 	).Filters(
-		func(msg broadcast.Message) bool {
-			_, ok := msg.(string)
-			return !ok
-		},
+		keepStringMessagesOnly,
 	)
 	defer broadcaster.Wait()
 
 	fmt.Println("===> Broadcasting some messages...")
+
 	broadcaster.Broadcast("Hello world!").
 		Broadcast("Hello kitty!").
 		Broadcast(0xdeadbeef).
@@ -38,14 +37,20 @@ func main() {
 	time.Sleep(time.Millisecond)
 
 	fmt.Println("===> Stopping everything now...")
+
 	cancel()
 
 	fmt.Println("===> Exiting.")
 }
 
+func keepStringMessagesOnly(msg broadcast.Message) bool {
+	_, ok := msg.(string)
+	return !ok
+}
+
 func makeListener(name string) broadcast.InitFunc {
 	listener := func(ctx context.Context, waitgroup *sync.WaitGroup) chan<- broadcast.Message {
-		ch := make(chan broadcast.Message, 5) // 5 because why not?
+		ch := make(chan broadcast.Message)
 		go func() {
 			defer waitgroup.Done()
 			for {

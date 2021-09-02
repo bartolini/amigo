@@ -12,32 +12,33 @@ type FilterFunc func(Message) bool
 type Message interface{}
 
 type Broadcaster struct {
-	ctx       context.Context
 	listeners []chan<- Message
 	filters   []FilterFunc
 	waitgroup *sync.WaitGroup
+	mutex     sync.Mutex
 }
 
-func NewBroadcaster(ctx context.Context) *Broadcaster {
+func NewBroadcaster() *Broadcaster {
 	broadcaster := new(Broadcaster)
-	broadcaster.ctx = ctx
 	broadcaster.listeners = make([]chan<- Message, 0)
 	broadcaster.filters = make([]FilterFunc, 0)
 	broadcaster.waitgroup = new(sync.WaitGroup)
 	return broadcaster
 }
 
-func (b *Broadcaster) Listeners(listeners ...InitFunc) *Broadcaster {
+func (b *Broadcaster) Listeners(ctx context.Context, listeners ...InitFunc) *Broadcaster {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	b.waitgroup.Add(len(listeners))
-	channels := make([]chan<- Message, len(listeners))
-	for i, init := range listeners {
-		channels[i] = init(b.ctx, b.waitgroup)
+	for _, init := range listeners {
+		b.listeners = append(b.listeners, init(ctx, b.waitgroup))
 	}
-	b.listeners = append(b.listeners, channels...)
 	return b
 }
 
 func (b *Broadcaster) Filters(filters ...FilterFunc) *Broadcaster {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	b.filters = append(b.filters, filters...)
 	return b
 }
