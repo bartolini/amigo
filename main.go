@@ -12,8 +12,9 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	broadcaster := broadcast.NewBroadcaster().Listeners(
+	broadcaster := broadcast.NewBroadcaster(
 		ctx,
+	).Listeners(
 		makeListener("John"),
 		makeListener("Amy"),
 		makeListener("Deco"),
