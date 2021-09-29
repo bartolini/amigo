@@ -1,7 +1,7 @@
 Just a simple example of broadcasting/fan-out in Go.
 
 Sample output:
-
+'''
 ===> Broadcasting some messages...
 Kathy:	Hello world!
 Kathy:	Hello kitty!
@@ -35,4 +35,4 @@ John:	Goodbye!
 Amy:	Goodbye!
 Rian:	Goodbye!
 Deco:	Goodbye!
-
+'''
